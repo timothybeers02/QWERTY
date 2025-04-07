@@ -9,6 +9,7 @@ import SwiftUI
 
 struct KeyCapRowsView: View {
     var rows: [[String]]
+    var withTopPadding: Bool = true
 
     var body: some View {
         VStack(spacing: 4) {
@@ -21,6 +22,6 @@ struct KeyCapRowsView: View {
             }
         }
         .scaleEffect(1.5) // TODO: TB - Update fonts and stuff instead
-        .padding(.top, 150)
+        .padding(.top, withTopPadding ? 150 : 0)
     }
 }

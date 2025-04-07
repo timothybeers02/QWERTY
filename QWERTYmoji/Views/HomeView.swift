@@ -52,7 +52,7 @@ struct HomeView: View {
                     GameSelectView(path: $path)
                         .environment(\.keyboardObserver, keyboardObserver)
                 case .gameStart:
-                    GameView()
+                    GameView(path: $path)
                         .environment(\.keyboardObserver, keyboardObserver)
                 case .stats:
                     StatsView()

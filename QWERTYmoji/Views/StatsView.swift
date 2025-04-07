@@ -64,11 +64,11 @@ struct StatsView: View {
 
     var placeholderRecentGamesRow: some View {
         VStack(spacing: 30) {
-            RecentGameRow(sceneType: UFOTypingScene.self, timeAgo: "5m ago", averageTimeToType: "1.7s", troubleKeys: [.testKeyFour, .testKeyOne])
+            RecentGameRow(sceneType: UFOTypingScene.self, timeAgo: "1m ago", averageTimeToType: "1.7s", troubleKeys: [.testKeyFour, .testKeyOne])
 
-            RecentGameRow(sceneType: UFOTypingScene.self, timeAgo: "2h ago", averageTimeToType: "2.3s", troubleKeys: [.testKeyOne, .testKeyFive])
+            RecentGameRow(sceneType: UFOTypingScene.self, timeAgo: "7m ago", averageTimeToType: "2.3s", troubleKeys: [.testKeyOne, .testKeyFive])
 
-            RecentGameRow(sceneType: UFOTypingScene.self, timeAgo: "1d ago", averageTimeToType: "2.1s", troubleKeys: [.testKeyThree, .testKeyTwo])
+            RecentGameRow(sceneType: UFOTypingScene.self, timeAgo: "1h ago", averageTimeToType: "2.1s", troubleKeys: [.testKeyThree, .testKeyTwo])
         }
     }
 }
@@ -136,24 +136,6 @@ struct RecentGameRow: View {
                         .font(.headline)
                 }
             }
-//            VStack(alignment: .leading, spacing: 10) {
-//                Text(sceneType.friendlyName)
-//                    .font(.title2)
-//                    .fontWeight(.medium)
-//
-//                Text(timeAgo)
-//                    .font(.headline)
-//            }
-//
-//            Spacer()
-//
-//            VStack(alignment: .trailing, spacing: 15) {
-//                Text("ATTT: \(averageTimeToType)")
-//                    .fontWeight(.medium)
-//
-//                Text("NMPO: \(troubleKeysString)")
-//            }
-//            .font(.subheadline)
         }
         .padding()
         .cardBackground()
@@ -179,15 +161,6 @@ extension View {
                         .stroke(Color.charcoalBlue.opacity(0.2), lineWidth: 1)
                 }
             }
-//            .background {
-//                Color.white
-//                    .clipShape(RoundedRectangle(cornerRadius: 4))
-//                    .background {
-//                        Color.charcoalBlue
-//                            .clipShape(RoundedRectangle(cornerRadius: 4))
-//                            .offset(x: 0.5, y: 1)
-//                    }
-//            }
     }
 }
 

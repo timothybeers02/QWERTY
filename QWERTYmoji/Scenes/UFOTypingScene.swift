@@ -16,6 +16,7 @@ protocol TypingScene: SKScene, Hashable {
     static var thumbnail: String { get }
 
     var roundStats: RoundStats? { get set }
+    var onGameOver: (() -> Void)? { get set }
 
     func pause()
     func resume()
@@ -34,10 +35,12 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
     static var friendlyName: String { "Alien Invasion" }
 
     var roundStats: RoundStats?
+    var onGameOver: (() -> Void)?
 
     private var ufoNodes: [UFONode] = []
     private var lastUpdateTime: TimeInterval = 0
     private var spawnTimer: TimeInterval = 0
+    private var totalSpawnedUFOs: Int = 0
     private var difficulty: CGFloat = 1.0
     private var cityBackground: SKNode?
 
@@ -70,31 +73,11 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
     }
 
     private func setupBackground() {
-        // For now, using a placeholder gradient background
+        // Placeholder image background TODO: investigate animated/parallax alts.
         let background = SKSpriteNode(imageNamed: "invasionBackground")
         background.position = CGPoint(x: frame.midX, y: frame.midY)
         background.zPosition = -1
         addChild(background)
-
-        /*
-         Animated background implementation guide:
-         1. Create a series of building silhouettes as SKSpriteNodes
-         2. Use SKAction.move to scroll them horizontally
-         3. When a building moves off screen, reset its position to the right
-         4. Use multiple layers moving at different speeds for parallax effect
-
-         Example implementation:
-         let buildings = SKNode()
-         let buildingTextures = [SKTexture](named: "building_%d", count: 5)
-         for i in 0..<3 {
-         let building = SKSpriteNode(texture: buildingTextures[i])
-         building.position = CGPoint(x: CGFloat(i) * building.size.width, y: frame.height * 0.2)
-         buildings.addChild(building)
-         }
-         let moveAction = SKAction.moveBy(x: -100, y: 0, duration: 1.0)
-         let repeatAction = SKAction.repeatForever(moveAction)
-         buildings.run(repeatAction)
-         */
     }
 
     func didBegin(_ contact: SKPhysicsContact) {
@@ -115,6 +98,11 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
                 // Remove nodes
                 ufoNode.removeFromParent()
                 projectile?.removeFromParent()
+
+                // Check for end game condition
+                if totalSpawnedUFOs == 10 && ufoNodes.isEmpty {
+                    endGame()
+                }
             }
         }
     }
@@ -136,6 +124,11 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
 
     func resume() {
         // no-op TODO: tb
+    }
+
+    private func endGame() {
+        roundStats = RoundStats(endDate: Date())
+        onGameOver?()
     }
 
     private func createExplosionEffect(at position: CGPoint) {
@@ -314,6 +307,8 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
     }
 
     private func spawnUFO() {
+        guard totalSpawnedUFOs < 10 else { return }
+
         let key = KeyboardLayout.allKeys.randomElement()!
 
         let ufo = UFONode(emoji: key.emoji)
@@ -323,6 +318,8 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
         )
         ufoNodes.append(ufo)
         addChild(ufo)
+
+        totalSpawnedUFOs += 1
     }
 }
 
@@ -342,11 +339,11 @@ class UFONode: SKNode {
 
         addChild(bodyNode)
 
-//        let label = SKLabelNode(text: emoji)
-//        label.fontSize = 32
-//        label.fontColor = .white
-//        label.position = CGPoint(x: 0, y: -5)
-//        addChild(label)
+        let label = SKLabelNode(text: emoji)
+        label.fontSize = 32
+        label.fontColor = .white
+        label.position = CGPoint(x: 0, y: -5)
+        addChild(label)
 
         self.physicsBody = SKPhysicsBody(circleOfRadius: 30)
         self.physicsBody?.categoryBitMask = PhysicsCategory.ufo
