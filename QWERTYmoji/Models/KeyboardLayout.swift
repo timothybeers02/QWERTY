@@ -46,9 +46,18 @@ struct KeyboardLayout {
     /// The space row is defined as several keys that all represent a space tap,
     /// but display different space-themed emojis.
     static let spaceRow: [EmojiKey] = [
-        EmojiKey(letter: " ", emoji: "🚀"),
-        EmojiKey(letter: " ", emoji: "🛰"),
-        EmojiKey(letter: " ", emoji: "🌌"),
-        EmojiKey(letter: " ", emoji: "☄️")
+        EmojiKey(letter: " ", emoji: "🚀🛰🌌☄️")
     ]
+
+    static var allKeys: [EmojiKey] {
+        topRow + middleRow + bottomRow + spaceRow
+    }
+}
+
+extension EmojiKey {
+    static let testKeyOne = EmojiKey(letter: "M", emoji: "🍈")
+    static let testKeyTwo = EmojiKey(letter: "S", emoji: "🍓")
+    static let testKeyThree = EmojiKey(letter: "N", emoji: "🍑")
+    static let testKeyFour = EmojiKey(letter: "I", emoji: "🍦")
+    static let testKeyFive = EmojiKey(letter: "H", emoji: "🍯")
 }
