@@ -19,6 +19,7 @@ struct HomeView: View {
 
     @State private var path: [Destination] = []
     @State var keyboardObserver = KeyboardObserver()
+    @State var statsRepository = FileStatsRepository()
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -75,6 +76,7 @@ struct HomeView: View {
             }
 //            .environment(\.keyboardObserver, keyboardObserver)
         }
+        .environment(\.statsRepository, statsRepository)
     }
 }
 
@@ -97,7 +99,7 @@ struct KeycapText: View {
             .background {
                 ZStack {
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(.white)
+                        .fill(.cardBackground)
                         .stroke(Color.charcoalBlue.opacity(0.2), lineWidth: 4)
 
                     RoundedRectangle(cornerRadius: 6)
@@ -178,6 +180,7 @@ struct Pressed3DButtonStyle: ButtonStyle {
 
 extension EnvironmentValues {
     @Entry var keyboardObserver = KeyboardObserver()
+    @Entry var statsRepository: StatsRepository = FileStatsRepository()
 }
 
 #Preview {

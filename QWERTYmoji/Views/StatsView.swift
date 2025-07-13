@@ -7,7 +7,65 @@
 
 import SwiftUI
 
+extension StatsRepository {
+    var sortedRecentRounds: [RoundStats] {
+        allStats.sorted { $0.endDate > $1.endDate }
+    }
+
+    var troubleKeys: [EmojiKey] {
+        let strokes = allStats.flatMap { $0.keyStrokeStats }
+        let grouped = Dictionary(grouping: strokes, by: { $0.actualEmoji })
+        let averages = grouped.mapValues { list in
+            list.map(\.timeToType).reduce(0, +) / Double(list.count)
+        }
+        return averages
+            .sorted { $0.value > $1.value }
+            .prefix(4)
+            .compactMap { emoji, _ in
+                KeyboardLayout.allKeys.first(where: { $0.emoji == emoji })
+            }
+    }
+
+    func averageTimeString(for key: EmojiKey) -> String {
+        let times = allStats
+            .flatMap { $0.keyStrokeStats }
+            .filter { $0.actualEmoji == key.emoji }
+            .map(\.timeToType)
+        guard !times.isEmpty else { return "--" }
+        let avg = times.reduce(0, +) / Double(times.count)
+        return String(format: "%.1fs", avg)
+    }
+
+    func timeAgoString(for round: RoundStats) -> String {
+        let sec = Date().timeIntervalSince(round.endDate)
+        if sec < 60 { return "\(Int(sec))s ago" }
+        if sec < 3600 { return "\(Int(sec/60))m ago" }
+        return "\(Int(sec/3600))h ago"
+    }
+
+    func averageTimeString(for round: RoundStats) -> String {
+        let times = round.keyStrokeStats.map(\.timeToType)
+        guard !times.isEmpty else { return "--" }
+        let avg = times.reduce(0, +) / Double(times.count)
+        return String(format: "%.1fs", avg)
+    }
+
+    func troubleKeys(for round: RoundStats) -> [EmojiKey] {
+        let counts = Dictionary(grouping: round.keyStrokeStats, by: { $0.actualEmoji })
+            .mapValues(\.count)
+        return counts
+            .sorted { $0.value > $1.value }
+            .prefix(2)
+            .compactMap { emoji, _ in
+                KeyboardLayout.allKeys.first(where: { $0.emoji == emoji })
+            }
+    }
+}
+
 struct StatsView: View {
+
+    @Environment(\.statsRepository) var statsRepository
+
     var body: some View {
         DismissableVStack(showMenuBackground: true) {
 
@@ -26,8 +84,11 @@ struct StatsView: View {
                     }
                     .font(.title)
 
-                    // TODO: TB - ForEach ttt row
-                    placeholderPracticeRow
+                    HStack(spacing: 30) {
+                        ForEach(statsRepository.troubleKeys, id: \.self) { key in
+                            TimeToTypeRow(key: key, timeToType: statsRepository.averageTimeString(for: key))
+                        }
+                    }
 
                     HStack(spacing: 20) {
                         Image(systemName: "clock.badge.checkmark.fill")
@@ -37,8 +98,16 @@ struct StatsView: View {
                     .font(.title)
                     .padding(.top, 40)
 
-                    // TODO: TB - ForEach recent game (up to 3-5)
-                    placeholderRecentGamesRow
+                    VStack(spacing: 30) {
+                        ForEach(statsRepository.sortedRecentRounds.prefix(5), id: \.endDate) { round in
+                            RecentGameRow(
+                                sceneType: UFOTypingScene.self,
+                                timeAgo: statsRepository.timeAgoString(for: round),
+                                averageTimeToType: statsRepository.averageTimeString(for: round),
+                                troubleKeys: statsRepository.troubleKeys(for: round)
+                            )
+                        }
+                    }
 
                     Spacer()
                 }
@@ -48,28 +117,6 @@ struct StatsView: View {
             .padding(.top, 40)
         }
         .toolbar(.hidden)
-    }
-
-    var placeholderPracticeRow: some View {
-        HStack(spacing: 30) {
-            TimeToTypeRow(key: .testKeyOne, timeToType: "4.9s")
-
-            TimeToTypeRow(key: .testKeyTwo, timeToType: "2.7s")
-
-            TimeToTypeRow(key: .testKeyThree, timeToType: "2.3s")
-
-            TimeToTypeRow(key: .testKeyFive, timeToType: "2.2s")
-        }
-    }
-
-    var placeholderRecentGamesRow: some View {
-        VStack(spacing: 30) {
-            RecentGameRow(sceneType: UFOTypingScene.self, timeAgo: "1m ago", averageTimeToType: "1.7s", troubleKeys: [.testKeyFour, .testKeyOne])
-
-            RecentGameRow(sceneType: UFOTypingScene.self, timeAgo: "7m ago", averageTimeToType: "2.3s", troubleKeys: [.testKeyOne, .testKeyFive])
-
-            RecentGameRow(sceneType: UFOTypingScene.self, timeAgo: "1h ago", averageTimeToType: "2.1s", troubleKeys: [.testKeyThree, .testKeyTwo])
-        }
     }
 }
 
@@ -121,8 +168,14 @@ struct RecentGameRow: View {
 
                     Spacer()
 
-                    Text("ATTT: \(averageTimeToType)")
+                    Text("Avg. Per Emoji:")
                         .font(.headline)
+                        .foregroundStyle(Color.secondary)
+
+                    Text(averageTimeToType)
+                        .font(.headline)
+                        .foregroundStyle(Color.primary)
+                        .padding(.leading, 4)
                 }
                 .fontWeight(.medium)
 
@@ -132,8 +185,14 @@ struct RecentGameRow: View {
 
                     Spacer()
 
-                    Text("NMPO: \(troubleKeysString)")
+                    Text("Needs More Practice:")
                         .font(.headline)
+                        .foregroundStyle(Color.secondary)
+
+                    Text(troubleKeysString)
+                        .font(.headline)
+                        .foregroundStyle(Color.primary)
+                        .padding(.leading, 4)
                 }
             }
         }
@@ -157,7 +216,7 @@ extension View {
                         .offset(x: 1, y: 2)
 
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(.white)
+                        .fill(Color.cardBackground)
                         .stroke(Color.charcoalBlue.opacity(0.2), lineWidth: 1)
                 }
             }

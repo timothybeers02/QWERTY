@@ -11,6 +11,7 @@ import SpriteKit
 struct GameView: View {
 
     @Environment(\.keyboardObserver) var keyboardObserver
+    @Environment(\.statsRepository) var statsRepository
     @Binding var path: [Destination]
     @State private var scene: UFOTypingScene?
     @State private var gameEnded = false
@@ -27,36 +28,49 @@ struct GameView: View {
                         print("Key tapped \(key.emoji)")
                     }
             }
-            .onAppear {
-                let newScene = UFOTypingScene()
-                newScene.scaleMode = .resizeFill
-                newScene.onGameOver = { gameEnded = true }
-                scene = newScene
-            }
+            .onAppear(perform: setupScene)
 
             if gameEnded {
-                VStack(spacing: 20) {
-                    KeyCapRowsView(rows: [
-                        "GAME OVER".map { String($0) },
-                    ], withTopPadding: false)
-                    .scaleEffect(0.75)
-                    .padding(50)
-
-                    Text("Nice Work! You beat all the aliens, for now.")
-                        .font(.title)
-
-                    // TODO: TB - play again button
-                    MainContentButton(title: "GO BACK", systemImage: "arrowshape.turn.up.backward.fill", color: .gray) {
-                        path = []
-                    }
-                    .scaleEffect(0.75)
-                    .padding(.horizontal, 75)
-                    .padding(.bottom, 50)
-                }
-                .cardBackground()
-                .padding(.horizontal, 150)
+                gameOverPopup
             }
         }
         .toolbar(.hidden)
+    }
+
+    private var gameOverPopup: some View {
+        VStack(spacing: 20) {
+            KeyCapRowsView(rows: [
+                "GAME OVER".map { String($0) },
+            ], withTopPadding: false)
+            .scaleEffect(0.75)
+            .padding(50)
+
+            Text("Nice Work! You beat all the aliens, for now.")
+                .font(.title)
+
+            // TODO: TB - play again button
+            MainContentButton(title: "GO BACK", systemImage: "arrowshape.turn.up.backward.fill", color: .gray) {
+                path = []
+            }
+            .scaleEffect(0.75)
+            .padding(.horizontal, 75)
+            .padding(.bottom, 50)
+        }
+        .cardBackground()
+        .padding(.horizontal, 150)
+    }
+
+    private func setupScene() {
+        let newScene = UFOTypingScene()
+        newScene.scaleMode = .resizeFill
+        newScene.onGameOver = { roundStats in
+            do {
+                try statsRepository.save(roundStats)
+            } catch {
+                print("error saving stats: \(error)")
+            }
+            gameEnded = true
+        }
+        scene = newScene
     }
 }

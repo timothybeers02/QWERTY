@@ -7,16 +7,24 @@
 
 import SpriteKit
 
+struct KeyStrokeStat: Codable {
+    let actualEmoji: String
+    let enteredEmoji: String
+    let timeToType: TimeInterval
+}
+
 struct RoundStats: Codable {
-    let endDate: Date
+    let gameMode: String
+    var endDate = Date.now
+    var keyStrokeStats: [KeyStrokeStat] = []
 }
 
 protocol TypingScene: SKScene, Hashable {
     static var friendlyName: String { get }
     static var thumbnail: String { get }
 
-    var roundStats: RoundStats? { get set }
-    var onGameOver: (() -> Void)? { get set }
+//    var roundStats: RoundStats { get set }
+    var onGameOver: ((RoundStats) -> Void)? { get set }
 
     func pause()
     func resume()
@@ -34,13 +42,14 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
 
     static var friendlyName: String { "Alien Invasion" }
 
-    var roundStats: RoundStats?
-    var onGameOver: (() -> Void)?
+    var roundStats = RoundStats(gameMode: friendlyName)
+    var onGameOver: ((RoundStats) -> Void)?
 
     private var ufoNodes: [UFONode] = []
     private var lastUpdateTime: TimeInterval = 0
     private var spawnTimer: TimeInterval = 0
     private var totalSpawnedUFOs: Int = 0
+    private var lastLowestUFO: UFONode?
     private var difficulty: CGFloat = 1.0
     private var cityBackground: SKNode?
 
@@ -114,6 +123,17 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
         else { return }
 
         if bottomUFO.emoji == emoji {
+            // Compute time to type
+            if let appeared = bottomUFO.bottomAppearedDate {
+                let timeTaken = Date().timeIntervalSince(appeared)
+                roundStats.keyStrokeStats.append(
+                    KeyStrokeStat(
+                        actualEmoji: bottomUFO.emoji,
+                        enteredEmoji: emoji,
+                        timeToType: timeTaken
+                    )
+                )
+            }
             fireProjectile(at: bottomUFO)
         }
     }
@@ -127,8 +147,8 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
     }
 
     private func endGame() {
-        roundStats = RoundStats(endDate: Date())
-        onGameOver?()
+        roundStats.endDate = Date.now
+        onGameOver?(roundStats)
     }
 
     private func createExplosionEffect(at position: CGPoint) {
@@ -263,6 +283,11 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
         // Sort UFOs by height
         let sortedUFOs = ufoNodes.sorted { $0.position.y < $1.position.y }
 
+        if let newLowest = sortedUFOs.first(where: { !$0.wasShotAt }), newLowest !== lastLowestUFO {
+            newLowest.bottomAppearedDate = Date()
+            lastLowestUFO = newLowest
+        }
+
         // Check if any UFO is too low
         if let lowestUFO = sortedUFOs.first {
             let threshold = frame.height * 0.3
@@ -328,6 +353,7 @@ class UFONode: SKNode {
     let emoji: String
     let bodyNode: SKSpriteNode
     var wasShotAt: Bool = false
+    var bottomAppearedDate: Date?
 
     init(emoji: String) {
         self.emoji = emoji
