@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+/// Convenience methods for statistics display
 extension StatsRepository {
     var sortedRecentRounds: [RoundStats] {
         allStats.sorted { $0.endDate > $1.endDate }
@@ -62,6 +63,7 @@ extension StatsRepository {
     }
 }
 
+/// Shows recent round stats to the user
 struct StatsView: View {
 
     @Environment(\.statsRepository) var statsRepository

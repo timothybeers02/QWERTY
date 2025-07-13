@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+/// View where users select the game mode to play, navigating to GameView with the selection
 struct GameSelectView: View {
 
     @Binding var path: [Destination]

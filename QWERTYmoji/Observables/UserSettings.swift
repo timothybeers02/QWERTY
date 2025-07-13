@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+/// Defines user configurable settings and stores them in UserDefaults
 @Observable
 class UserSettings {
     var difficultyRampUpEnabled: Bool {

@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+/// Styled Text for headers in the app
 struct KeyCapRowsView: View {
     var rows: [[String]]
     var withTopPadding: Bool = true

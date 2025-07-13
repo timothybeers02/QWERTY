@@ -12,6 +12,7 @@ protocol StatsRepository {
     func save(_ stats: RoundStats) throws
 }
 
+/// A `StatsRepository` that persists to the local file system
 class FileStatsRepository: StatsRepository {
 
     let folderURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]

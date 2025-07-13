@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+/// Contains all configurable settings for the game
 struct SettingsView: View {
 
     @Binding var path: [Destination]

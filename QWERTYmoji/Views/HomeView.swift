@@ -15,6 +15,7 @@ enum Destination: Hashable {
     case keyboardSizer
 }
 
+/// Landing page for the app
 struct HomeView: View {
 
     @State private var path: [Destination] = []

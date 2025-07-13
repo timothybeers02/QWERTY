@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+/// A styled (parent) VStack for dismissable screens
 struct DismissableVStack<Content: View>: View {
 
     var showMenuBackground: Bool = false

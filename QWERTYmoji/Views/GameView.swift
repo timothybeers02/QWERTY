@@ -8,6 +8,7 @@
 import SwiftUI
 import SpriteKit
 
+/// View where the game occurs
 struct GameView: View {
 
     @Environment(\.keyboardObserver) var keyboardObserver

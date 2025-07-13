@@ -23,6 +23,7 @@ struct RoundStats: Codable {
     var keyStrokeStats: [KeyStrokeStat] = []
 }
 
+/// Should be implemented by all game scenes. Provides common properties and methods to be called on by `GameView`
 protocol TypingScene: SKScene, Hashable {
     static var friendlyName: String { get }
     static var thumbnail: String { get }
@@ -39,6 +40,7 @@ protocol TypingScene: SKScene, Hashable {
 }
 
 extension TypingScene {
+    /// A previewable image of the game mode for visual clarity
     static var thumbnail: String {
         String(describing: Self.self) + "_thumbnail"
     }
@@ -87,6 +89,12 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
     private let baseSpeed: CGFloat = 50.0
     private let projectileSpeed: CGFloat = 400.0
     private let minVerticalSpacing: CGFloat = 100.0  // Minimum space between UFOs
+
+    /// Horizontal bob amplitude (points)
+    private let bobAmplitude: CGFloat = 20.0
+
+    /// Horizontal bob frequency (radians per second)
+    private let bobFrequency: CGFloat = 4.0
 
     override func didMove(to view: SKView) {
         backgroundColor = .black
@@ -377,9 +385,10 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
                 // Slow down all UFOs
                 difficulty = max(0.5, difficulty - 0.1)
 
-                // Stop all UFOs while maintaining relative positions
+                // Bob UFOs horizontally, but do not descend
                 for ufo in ufoNodes {
-                    ufo.physicsBody?.velocity = .zero
+                    let horizontalVelocity = bobAmplitude * sin(bobFrequency * CGFloat(currentTime) + ufo.bobPhase)
+                    ufo.physicsBody?.velocity = CGVector(dx: horizontalVelocity, dy: 0)
                 }
             } else {
                 // Resume movement and gradually increase difficulty
@@ -404,7 +413,9 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
 
                     // Apply velocity only if not too low
                     if !isTooLow {
-                        ufo.physicsBody?.velocity.dy = -baseSpeed * difficulty
+                        let verticalVelocity = -baseSpeed * difficulty
+                        let horizontalVelocity = bobAmplitude * sin(bobFrequency * CGFloat(currentTime) + ufo.bobPhase)
+                        ufo.physicsBody?.velocity = CGVector(dx: horizontalVelocity, dy: verticalVelocity)
                     }
                 }
             }
@@ -433,12 +444,15 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
 class UFONode: SKNode {
     let emoji: String
     let bodyNode: SKSpriteNode
+    /// Random phase offset for bobbing motion
+    let bobPhase: CGFloat
     var wasShotAt: Bool = false
     var bottomAppearedDate: Date?
 
     init(emoji: String) {
         self.emoji = emoji
         self.bodyNode = SKSpriteNode(imageNamed: "ufoProto")
+        self.bobPhase = CGFloat.random(in: 0...2 * .pi)
         let desiredWidth: CGFloat = 100
         let aspectRatio = bodyNode.size.height / bodyNode.size.width
         bodyNode.size = CGSize(width: desiredWidth, height: desiredWidth * aspectRatio)
