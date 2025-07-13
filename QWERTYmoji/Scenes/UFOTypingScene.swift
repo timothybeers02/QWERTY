@@ -23,8 +23,11 @@ protocol TypingScene: SKScene, Hashable {
     static var friendlyName: String { get }
     static var thumbnail: String { get }
 
-//    var roundStats: RoundStats { get set }
+    //    var roundStats: RoundStats { get set }
     var onGameOver: ((RoundStats) -> Void)? { get set }
+
+    var remainingTargets: Int { get }
+    var totalMistypes: Int { get }
 
     func pause()
     func resume()
@@ -38,14 +41,24 @@ extension TypingScene {
 }
 
 // MARK: - Game Scene
+@Observable
 class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
 
     static var friendlyName: String { "Alien Invasion" }
 
+    var rampUpEnabled: Bool = true
     var roundStats = RoundStats(gameMode: friendlyName)
     var onGameOver: ((RoundStats) -> Void)?
 
     private var ufoNodes: [UFONode] = []
+    var remainingTargets: Int {
+        return ufoNodes.count
+    }
+
+    private(set) var mistypeCount: Int = 0
+    var totalMistypes: Int {
+        return mistypeCount
+    }
     private var lastUpdateTime: TimeInterval = 0
     private var spawnTimer: TimeInterval = 0
     private var totalSpawnedUFOs: Int = 0
@@ -82,11 +95,53 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
     }
 
     private func setupBackground() {
-        // Placeholder image background TODO: investigate animated/parallax alts.
-        let background = SKSpriteNode(imageNamed: "invasionBackground")
-        background.position = CGPoint(x: frame.midX, y: frame.midY)
-        background.zPosition = -1
-        addChild(background)
+        // Remove any existing background nodes
+        enumerateChildNodes(withName: "backgroundLayer") { node, _ in
+            node.removeFromParent()
+        }
+
+        let backgroundNames = [
+            ("invasionBackgroundTop", -3, 5.0),
+            ("invasionBackgroundMid", -2, 4.0),
+            ("invasionBackgroundBottom", -1, 2.5)
+        ]
+
+        // Calculate the scaled heights for each layer
+        var scaledHeights: [CGFloat] = []
+        for (imageName, _, _) in backgroundNames {
+            let sprite = SKSpriteNode(imageNamed: imageName)
+            let scale = frame.width / sprite.size.width
+            scaledHeights.append(sprite.size.height * scale)
+        }
+
+        // For each layer, compute the cumulative Y offset so each stacks on the previous
+        for (index, (imageName, zPos, speed)) in backgroundNames.enumerated() {
+            // Add two sprites for seamless looping, precisely end-to-end horizontally
+            let tempSprite = SKSpriteNode(imageNamed: imageName)
+            let scale = frame.width / tempSprite.size.width
+            let scaledWidth = tempSprite.size.width * scale
+            let yOffset = scaledHeights[(index+1)...].reduce(0, +)
+            for i in 0..<2 {
+                let sprite = SKSpriteNode(imageNamed: imageName)
+                sprite.anchorPoint = CGPoint(x: 0, y: 0)
+                sprite.xScale = scale
+                sprite.yScale = scale
+                sprite.position = CGPoint(
+                    x: CGFloat(i) * scaledWidth,
+                    y: frame.minY + yOffset
+                )
+                sprite.zPosition = CGFloat(zPos)
+                sprite.name = "backgroundLayer"
+                addChild(sprite)
+
+                // Move left by exactly the scaled width, then reset
+                let moveLeft = SKAction.moveBy(x: -scaledWidth, y: 0, duration: speed * 10)
+                let reset = SKAction.moveBy(x: scaledWidth, y: 0, duration: 0)
+                let sequence = SKAction.sequence([moveLeft, reset])
+                let repeatForever = SKAction.repeatForever(sequence)
+                sprite.run(repeatForever)
+            }
+        }
     }
 
     func didBegin(_ contact: SKPhysicsContact) {
@@ -135,6 +190,8 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
                 )
             }
             fireProjectile(at: bottomUFO)
+        } else {
+            mistypeCount += 1
         }
     }
 

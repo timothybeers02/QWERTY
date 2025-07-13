@@ -12,15 +12,28 @@ struct GameView: View {
 
     @Environment(\.keyboardObserver) var keyboardObserver
     @Environment(\.statsRepository) var statsRepository
+    @Environment(\.userSettings) var userSettings
     @Binding var path: [Destination]
     @State private var scene: UFOTypingScene?
     @State private var gameEnded = false
+
+    private var totalMistypes: Int {
+        scene?.totalMistypes ?? 0
+    }
+
+    private var targetsLeft: String {
+        guard let targets = scene?.remainingTargets
+        else { return "--" }
+
+        return "\(targets)"
+    }
 
     var body: some View {
         ZStack {
             VStack {
                 SpriteView(scene: scene ?? UFOTypingScene())
                     .ignoresSafeArea()
+                    .overlay(alignment: .topTrailing) { roundHUD }
 
                 KeyboardView()
                     .onKeyTap { key in
@@ -35,6 +48,28 @@ struct GameView: View {
             }
         }
         .toolbar(.hidden)
+    }
+
+    private var roundHUD: some View {
+        VStack(alignment: .trailing, spacing: 8) {
+            Text(targetsLeft + " more targets")// TODO: TB - fix targetsLeft to match max amount - destroyed number since they spawn throughout the round
+            HStack {
+                if totalMistypes <= 3 {
+                    ForEach(0..<totalMistypes, id: \.self) { _ in
+                        Text("❌")
+                    }
+                } else {
+                    Text("\(totalMistypes) ❌")
+                }
+            }
+        }
+        .font(.title2)
+        .fontWeight(.bold)
+        .padding()
+        .foregroundStyle(Color.white)
+        .background {
+            Color.black.opacity(0.4).blur(radius: 20).ignoresSafeArea()
+        }
     }
 
     private var gameOverPopup: some View {
@@ -62,6 +97,7 @@ struct GameView: View {
 
     private func setupScene() {
         let newScene = UFOTypingScene()
+        newScene.rampUpEnabled = userSettings.difficultyRampUpEnabled
         newScene.scaleMode = .resizeFill
         newScene.onGameOver = { roundStats in
             do {

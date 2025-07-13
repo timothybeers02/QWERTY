@@ -20,6 +20,7 @@ struct HomeView: View {
     @State private var path: [Destination] = []
     @State var keyboardObserver = KeyboardObserver()
     @State var statsRepository = FileStatsRepository()
+    @State var userSettings = UserSettings()
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -77,6 +78,7 @@ struct HomeView: View {
 //            .environment(\.keyboardObserver, keyboardObserver)
         }
         .environment(\.statsRepository, statsRepository)
+        .environment(\.userSettings, userSettings)
     }
 }
 
@@ -181,6 +183,7 @@ struct Pressed3DButtonStyle: ButtonStyle {
 extension EnvironmentValues {
     @Entry var keyboardObserver = KeyboardObserver()
     @Entry var statsRepository: StatsRepository = FileStatsRepository()
+    @Entry var userSettings: UserSettings = UserSettings()
 }
 
 #Preview {

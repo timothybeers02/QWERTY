@@ -10,6 +10,7 @@ import SwiftUI
 struct SettingsView: View {
 
     @Binding var path: [Destination]
+    @Environment(\.userSettings) var userSettings
 
     var body: some View {
         DismissableVStack(showMenuBackground: true) {
@@ -19,6 +20,8 @@ struct SettingsView: View {
 
             Spacer()
 
+            difficultyRampUpToggle
+
             MainContentButton(title: "KEYBOARD SIZE", systemImage: "keyboard.fill", color: .customRose) {
                 path.append(.keyboardSizer)
             }
@@ -26,6 +29,24 @@ struct SettingsView: View {
             .padding(.bottom, 150)
         }
         .toolbar(.hidden)
+    }
+
+    private var difficultyRampUpToggle: some View {
+        MainContentButton(
+            title: userSettings.difficultyRampUpEnabled
+            ? "DISABLE FASTER ROUNDS"
+            : "ENABLE FASTER ROUNDS",
+            systemImage: userSettings.difficultyRampUpEnabled
+            ? "x.circle.fill"
+            : "checkmark.circle.fill",
+            color: .customRose
+        ) {
+            withAnimation {
+                userSettings.difficultyRampUpEnabled.toggle()
+            }
+        }
+        .padding(.horizontal, 210)
+        .padding(.bottom)
     }
 }
 
