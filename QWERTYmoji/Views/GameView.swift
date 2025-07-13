@@ -52,7 +52,7 @@ struct GameView: View {
 
     private var roundHUD: some View {
         VStack(alignment: .trailing, spacing: 8) {
-            Text(targetsLeft + " more targets")// TODO: TB - fix targetsLeft to match max amount - destroyed number since they spawn throughout the round
+            // Text(targetsLeft + " more targets")// TODO: TB - fix targetsLeft to match max amount minus destroyed number since they spawn throughout the round instead of all spawning at beginning
             HStack {
                 if totalMistypes <= 3 {
                     ForEach(0..<totalMistypes, id: \.self) { _ in

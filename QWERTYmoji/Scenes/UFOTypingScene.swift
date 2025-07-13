@@ -7,6 +7,10 @@
 
 import SpriteKit
 
+private enum Constants {
+    static let totalUFOCount: Int = 20
+}
+
 struct KeyStrokeStat: Codable {
     let actualEmoji: String
     let enteredEmoji: String
@@ -46,7 +50,18 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
 
     static var friendlyName: String { "Alien Invasion" }
 
+    /// Number of consecutive UFO destructions needed before spawn rate ramps up
+    var rampUpThreshold: Int = 1
     var rampUpEnabled: Bool = true
+
+    /// Current interval between spawns; initialized in didMove
+    private var currentSpawnInterval: TimeInterval = 0
+
+    /// Minimum allowed spawn interval when ramping up
+    private let minAllowedSpawnInterval: TimeInterval = 0.2
+
+    /// Count of back-to-back UFO destructions since last spawn
+    private var consecutiveDestroyCount: Int = 0
     var roundStats = RoundStats(gameMode: friendlyName)
     var onGameOver: ((RoundStats) -> Void)?
 
@@ -67,7 +82,7 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
     private var cityBackground: SKNode?
 
     // Configurable properties
-    private let minSpawnInterval: TimeInterval = 1.0
+    private let minSpawnInterval: TimeInterval = 2.0
     private let maxUFOs = 5
     private let baseSpeed: CGFloat = 50.0
     private let projectileSpeed: CGFloat = 400.0
@@ -80,6 +95,8 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
 
         // Set physics contact delegate
         physicsWorld.contactDelegate = self
+
+        currentSpawnInterval = minSpawnInterval
     }
 
     private func setupPhysics() {
@@ -163,8 +180,14 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
                 ufoNode.removeFromParent()
                 projectile?.removeFromParent()
 
+                // Track consecutive destructions for spawn ramp-up
+                consecutiveDestroyCount += 1
+                if rampUpEnabled && consecutiveDestroyCount > rampUpThreshold {
+                    currentSpawnInterval = max(minAllowedSpawnInterval, currentSpawnInterval * 0.9)
+                }
+
                 // Check for end game condition
-                if totalSpawnedUFOs == 10 && ufoNodes.isEmpty {
+                if totalSpawnedUFOs == Constants.totalUFOCount && ufoNodes.isEmpty {
                     endGame()
                 }
             }
@@ -332,7 +355,7 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
 
         // Update spawn timer
         spawnTimer += dt
-        if spawnTimer >= minSpawnInterval && ufoNodes.count < maxUFOs {
+        if spawnTimer >= currentSpawnInterval && ufoNodes.count < maxUFOs {
             spawnUFO()
             spawnTimer = 0
         }
@@ -389,7 +412,8 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
     }
 
     private func spawnUFO() {
-        guard totalSpawnedUFOs < 10 else { return }
+        guard totalSpawnedUFOs < Constants.totalUFOCount else { return }
+        consecutiveDestroyCount = 0
 
         let key = KeyboardLayout.allKeys.randomElement()!
 
