@@ -6,6 +6,7 @@
 //
 
 import SpriteKit
+import SwiftUI
 
 private enum Constants {
     static let totalUFOCount: Int = 20
@@ -28,7 +29,7 @@ protocol TypingScene: SKScene, Hashable {
     static var friendlyName: String { get }
     static var thumbnail: String { get }
 
-    //    var roundStats: RoundStats { get set }
+    var keyboardBackgroundColor: Color { get }
     var onGameOver: ((RoundStats) -> Void)? { get set }
 
     var remainingTargets: Int { get }
@@ -51,6 +52,8 @@ extension TypingScene {
 class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
 
     static var friendlyName: String { "Alien Invasion" }
+
+    var keyboardBackgroundColor = Color.invasionBackground
 
     /// Number of consecutive UFO destructions needed before spawn rate ramps up
     var rampUpThreshold: Int = 1
@@ -82,6 +85,7 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
     private var lastLowestUFO: UFONode?
     private var difficulty: CGFloat = 1.0
     private var cityBackground: SKNode?
+    private var firingOriginNode: SKSpriteNode!
 
     // Configurable properties
     private let minSpawnInterval: TimeInterval = 2.0
@@ -100,6 +104,7 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
         backgroundColor = .black
         setupBackground()
         setupPhysics()
+        setupFiringOrigin()
 
         // Set physics contact delegate
         physicsWorld.contactDelegate = self
@@ -273,7 +278,7 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
     private func fireProjectile(at target: UFONode) {
         target.wasShotAt = true
         let projectile = SKSpriteNode(color: .green, size: CGSize(width: 10, height: 20))
-        projectile.position = CGPoint(x: frame.midX, y: frame.height * 0.1)
+        projectile.position = CGPoint(x: frame.midX, y: firingOriginNode.position.y)
 
         // Configure physics body
         projectile.physicsBody = SKPhysicsBody(rectangleOf: projectile.size)
@@ -378,7 +383,7 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
 
         // Check if any UFO is too low
         if let lowestUFO = sortedUFOs.first {
-            let threshold = frame.height * 0.3
+            let threshold = frame.height * 0.35
             let isTooLow = lowestUFO.position.y < threshold
 
             if isTooLow {
@@ -438,6 +443,26 @@ class UFOTypingScene: SKScene, TypingScene, SKPhysicsContactDelegate {
 
         totalSpawnedUFOs += 1
     }
+
+    private func setupFiringOrigin() {
+        let fullTexture = SKTexture(imageNamed: "invasionCarMap")
+        let frameWidth = fullTexture.size().width / 3
+        let frameHeight = fullTexture.size().height
+
+        let firstFrame = SKTexture(rect: CGRect(x: 0, y: 0, width: frameWidth / fullTexture.size().width, height: 1.0), in: fullTexture)
+
+        firingOriginNode = SKSpriteNode(texture: firstFrame)
+        firingOriginNode.size = CGSize(width: frameWidth * 0.5, height: frameHeight * 0.5)
+        firingOriginNode.position = CGPoint(x: frame.midX, y: frame.height * 0.2)
+        firingOriginNode.zPosition = 1
+        addChild(firingOriginNode)
+
+        let moveUp = SKAction.moveBy(x: 0, y: 5, duration: 0.3)
+        let moveDown = SKAction.moveBy(x: 0, y: -5, duration: 0.3)
+        let bobSequence = SKAction.sequence([moveUp, moveDown])
+        let bobForever = SKAction.repeatForever(bobSequence)
+        firingOriginNode.run(bobForever)
+    }
 }
 
 // MARK: - UFO Node
@@ -461,9 +486,9 @@ class UFONode: SKNode {
         addChild(bodyNode)
 
         let label = SKLabelNode(text: emoji)
-        label.fontSize = 32
+        label.fontSize = 45
         label.fontColor = .white
-        label.position = CGPoint(x: 0, y: -5)
+        label.position = CGPoint(x: 0, y: -50)
         addChild(label)
 
         self.physicsBody = SKPhysicsBody(circleOfRadius: 30)

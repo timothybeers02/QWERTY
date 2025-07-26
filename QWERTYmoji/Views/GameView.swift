@@ -31,12 +31,14 @@ struct GameView: View {
 
     var body: some View {
         ZStack {
-            VStack {
+            VStack(spacing: .zero) {
                 SpriteView(scene: scene ?? UFOTypingScene())
                     .ignoresSafeArea()
                     .overlay(alignment: .topTrailing) { roundHUD }
 
-                KeyboardView()
+                Rectangle().fill(.black).frame(height: 1.0)
+
+                KeyboardView(backgroundColor: scene?.keyboardBackgroundColor)
                     .onKeyTap { key in
                         scene?.handleEmojiInput(key.emoji)
                         print("Key tapped \(key.emoji)")

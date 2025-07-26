@@ -14,6 +14,7 @@ struct KeyboardView: View {
     let verticalSpacing = 8.0
     let horizontalSpacing = 8.0
     var overrideScale: CGFloat? = nil
+    let backgroundColor: Color?
 
     var body: some View {
         VStack(spacing: verticalSpacing) {
@@ -22,10 +23,11 @@ struct KeyboardView: View {
             rowView(for: KeyboardLayout.bottomRow)
             rowView(for: KeyboardLayout.spaceRow)
         }
-        .background {
-            Color.black.opacity(0.1).background(Material.regularMaterial.opacity(0.2)).ignoresSafeArea()
-        }
         .scaleEffect(overrideScale ?? keyboardObserver.scale)
+        .padding(.top, verticalSpacing)
+        .background {
+            (backgroundColor ?? Color.black.opacity(0.1)).ignoresSafeArea()
+        }
     }
 
     @ViewBuilder
@@ -44,7 +46,6 @@ struct KeyboardView: View {
 extension KeyboardView {
 
     struct KeyButton: View {
-
         let key: EmojiKey
         @Environment(\.keyboardObserver) var keyboardObserver
 
@@ -54,12 +55,9 @@ extension KeyboardView {
                 keyboardObserver.tap(key: key)
             }) {
                 Text(key.emoji)
-                    .font(.title)
-//                    .frame(minWidth: 0, maxWidth: .infinity, minHeight: 44)
-                    .padding()
-                    .background(Color.gray.opacity(0.2))
-                    .cornerRadius(8)
+                    .font(.largeTitle)
             }
+            .buttonStyle(KeyStyle())
         }
     }
 }
@@ -82,5 +80,22 @@ struct KeyTapModifier: ViewModifier {
 extension View {
     func onKeyTap(_ perform: @escaping (EmojiKey) -> Void) -> some View {
         self.modifier(KeyTapModifier(perform: perform))
+    }
+}
+
+
+// MARK: - Custom Key Button Style
+struct KeyStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .padding()
+            .background(
+                configuration.isPressed
+                ? Color.keyBackgroundPressed.blur(radius: 1)
+                : Color.keyBackground.blur(radius: 1)
+            )
+            .cornerRadius(6)
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
     }
 }

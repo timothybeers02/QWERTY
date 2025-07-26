@@ -66,7 +66,7 @@ struct KeyboardSizingView: View {
 
             Spacer()
 
-            KeyboardView()
+            KeyboardView(backgroundColor: nil)
         }
         .toolbar(.hidden)
         .onAppear {
