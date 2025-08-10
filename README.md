@@ -119,6 +119,10 @@ Poster showing a visual summary of the project:
 
 - **[docs/ShowcasePoster.pdf](docs/ShowcasePoster.pdf)**
 
+Preview:
+
+![Showcase Poster PNG](docs/ShowcasePoster.png)
+
 ---
 
 ## Contact
