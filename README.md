@@ -21,7 +21,9 @@ This project delivers an iPad-based typing game specifically designed to help ch
 
 ## Demo
 
-- Screencast presentation: **[TODO]**
+- Screencast presentation:
+  - Part 1 (application demo): [Loom Link](https://www.loom.com/share/3b6c4b9591b144bc8b12be876d80aa8e?sid=15b0545e-39e8-4de4-ba7b-29fd81bb5909)
+  - Part 2 (implementation overview): [Loom Link](https://www.loom.com/share/9eebac71b6604458bf712e81e5d2f7ac?sid=391e5122-ad78-4ba4-b60f-53881012f398)
 
 ---
 
