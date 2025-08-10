@@ -76,7 +76,6 @@ struct HomeView: View {
                     .ignoresSafeArea()
                     .opacity(0.5)
             }
-//            .environment(\.keyboardObserver, keyboardObserver)
         }
         .environment(\.statsRepository, statsRepository)
         .environment(\.userSettings, userSettings)

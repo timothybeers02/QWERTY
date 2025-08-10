@@ -21,11 +21,14 @@ struct KeyboardObserverTests {
     func tapMethod() async throws {
         let observer = KeyboardObserver()
         let testKey = EmojiKey(letter: "A", emoji: "🚀")
+        Task {
+            let receivedKey = await observer.keyTapSubject.values.first { _ in true }
+
+            #expect(receivedKey == testKey)
+        }
         observer.tap(key: testKey)
 
-        let receivedKey = await observer.keyTapSubject.values.first { _ in true }
-
-        #expect(receivedKey == testKey)
+        await Task.yield()
     }
 
     @Test("KeyboardObserver scale can be modified")
